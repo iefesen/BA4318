@@ -1,0 +1,110 @@
+#Ilgın Efe Şenyuva - 2076990
+
+import pandas as pd 
+import numpy as np
+import math
+import matplotlib.pyplot as plt 
+from sklearn.metrics import mean_squared_error
+from math import sqrt
+from statsmodels.tsa.api import ExponentialSmoothing, SimpleExpSmoothing, Holt
+import statsmodels.api as sm
+
+#As there is seasonality and trend in the data, the two ways I want to test are; Holt's Method and the Holt-Winters' Method
+
+#Holt-Winters' Method
+def holt_winters(train, test, value, seasons):
+    y_hat_avg = test.copy()
+    array = np.asarray(train[value])
+    fit = ExponentialSmoothing( array ,seasonal_periods=seasons ,trend='add', seasonal='add',).fit()
+    y_hat_avg['Holt_Winter'] = fit.forecast( len(test) )
+    rms = sqrt(mean_squared_error(test[value], y_hat_avg.Holt_Winter))
+    print("RMS for Holt-Winters' Method: ", rms)
+    return rms
+
+#Holt's Method
+def holt(train,test,value,alpha):
+    sm.tsa.seasonal_decompose(train[value],freq = 3).plot()
+    result = sm.tsa.stattools.adfuller(train[value])
+    y_hat_avg = test.copy()
+    fit1 = Holt(np.asarray(train[value])).fit(smoothing_level = alpha,smoothing_slope = 0.1)
+    y_hat_avg['Holt_linear'] = fit1.forecast(len(test))
+    rms = sqrt(mean_squared_error(test[value], y_hat_avg.Holt_linear))
+    print("RMS for Holt's Method: ", rms)
+    return rms
+
+df = pd.read_csv("Oilprices.csv", sep=';')
+size = len(df)
+      
+#I have chosen the test data from the last 3 months as the fall started there.
+train = df[0:size-75]
+test = df[size-75:size-1]
+
+#As the data is daily, I have taken 5 as in the days of the week that is reported
+error_holt_winters = holt_winters(train, test,'WTI', 5)
+#I have chosen alpha equal to 0.1
+error_holt = holt(train,test,'WTI',0.1)
+
+#I take last 75 data as the fall started there.
+
+if error_holt < error_holt_winters:
+    print("We use Holt's Method")
+    fit1 = Holt(np.asarray(df['WTI'])).fit(smoothing_level = 0.1,smoothing_slope = 0.1)
+    myforecast = fit1.forecast(len(df))
+    added_data= {"DATE":'18.12.2018',"WTI":myforecast[0]}
+    print(added_data)
+    df = df.append(added_data,ignore_index=True)
+
+    fit1 = Holt(np.asarray(df['WTI'])).fit(smoothing_level = 0.1,smoothing_slope = 0.1)
+    myforecast = fit1.forecast(len(df))
+    added_data = {"DATE":'19.12.2018',"WTI":myforecast[0]}
+    print(added_data)
+    df = df.append(added_data,ignore_index=True)
+
+    fit1 = Holt(np.asarray(df['WTI'])).fit(smoothing_level = 0.1,smoothing_slope = 0.1)
+    myforecast = fit1.forecast(len(df))
+    added_data = {"DATE":'20.12.2018',"WTI":myforecast[0]}
+    print(added_data)
+    df = df.append(added_data,ignore_index=True)
+    
+    fit1 = Holt(np.asarray(df['WTI'])).fit(smoothing_level = 0.1,smoothing_slope = 0.1)
+    myforecast = fit1.forecast(len(df))
+    added_data = {"DATE":'21.12.2018',"WTI":myforecast[0]}
+    df = df.append(added_data,ignore_index=True)
+    print(added_data)
+else:
+    print("We use Holt-Winters' Method")
+    y_hat_avg = test.copy()
+    seasons = 5
+    array = np.asarray(df['WTI'])
+    fit = ExponentialSmoothing( array ,seasonal_periods=seasons ,trend='add', seasonal='add',).fit()
+    myforecast2 = fit.forecast( len(df) )
+    added_data2 = {"DATE":'18.12.2018',"WTI":myforecast2[0]}
+    df = df.append(added_data2,ignore_index=True)
+    print(added_data2)
+
+    y_hat_avg = test.copy()
+    seasons = 5
+    array = np.asarray(df['WTI'])
+    fit = ExponentialSmoothing( array ,seasonal_periods=seasons ,trend='add', seasonal='add',).fit()
+    myforecast2 = fit.forecast( len(df) )
+    added_data2 = {"DATE":'19.12.2018',"WTI":myforecast2[0]}
+    df = df.append(added_data2,ignore_index=True)
+    print(added_data2)
+
+    y_hat_avg = test.copy()
+    seasons = 5
+    array = np.asarray(df['WTI'])
+    fit = ExponentialSmoothing( array ,seasonal_periods=seasons ,trend='add', seasonal='add',).fit()
+    myforecast2 = fit.forecast( len(df) )
+    added_data2 = {"DATE":'20.12.2018',"WTI":myforecast2[0]}
+    df = df.append(added_data2,ignore_index=True)
+    print(added_data2)
+      
+    y_hat_avg = test.copy()
+    seasons = 5
+    array = np.asarray(df['WTI'])
+    fit = ExponentialSmoothing( array ,seasonal_periods=seasons ,trend='add', seasonal='add',).fit()
+    myforecast2 = fit.forecast( len(df) )
+    added_data2 = {"DATE":'21.12.2018',"WTI":myforecast2[0]}
+    df = df.append(added_data2,ignore_index=True)
+    print(added_data2)
